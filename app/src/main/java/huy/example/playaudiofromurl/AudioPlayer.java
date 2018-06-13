@@ -2,6 +2,7 @@ package huy.example.playaudiofromurl;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -76,7 +77,7 @@ public class AudioPlayer extends Dialog implements View.OnClickListener, View.On
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         progressBar.setVisibility(View.GONE);
         mediaPlayer = new MediaPlayer();
-//        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mediaPlayer.setOnBufferingUpdateListener(this);
         mediaPlayer.setOnCompletionListener(this);
 
@@ -89,6 +90,7 @@ public class AudioPlayer extends Dialog implements View.OnClickListener, View.On
      */
     private Runnable mUpdateTimeTask = new Runnable() {
         public void run() {
+            Log.d(TAG,"mUpdateTimeTask");
             long totalDuration = mediaPlayer.getDuration();
             long currentDuration = mediaPlayer.getCurrentPosition();
 
@@ -108,6 +110,12 @@ public class AudioPlayer extends Dialog implements View.OnClickListener, View.On
             }
         }
     };
+
+    @Override
+    public void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        detach();
+    }
 
 
     @Override
@@ -190,4 +198,8 @@ public class AudioPlayer extends Dialog implements View.OnClickListener, View.On
         seekBarProgress.setSecondaryProgress(percent);
     }
 
+    private void detach() {
+        if (mediaPlayer == null) return;
+        if (mediaPlayer.isPlaying()) mediaPlayer.stop();
+    }
 }

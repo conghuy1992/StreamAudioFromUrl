@@ -1,6 +1,7 @@
 package huy.example.playaudiofromurl;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnBufferingUpdateListener;
@@ -13,6 +14,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -20,21 +22,18 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 
-public class StreamingMp3Player extends Activity implements OnClickListener, OnTouchListener, OnCompletionListener, OnBufferingUpdateListener {
-    private TextView songTotalDurationLabel, songCurrentDurationLabel;
+public class StreamingMp3Player extends Activity implements OnClickListener {
     private ImageButton buttonPlayPause;
-    private SeekBar seekBarProgress;
-    public EditText editTextSongURL;
-    private ProgressBar progressBar;
+    //        String URL = "http://www.hrupin.com/wp-content/uploads/mp3/testsong_20_sec.mp3";
+//    String URL = "http://yefschool.monamedia.net/Upload/Exercise/45eb9221-e41f-49d5-af70-a2f7ec14baaf.mp3";
+    String URL = "https://www.ssaurel.com/tmp/mymusic.mp3";
+    private String TAG = "StreamingMp3Player";
+    private Button btn;
+    private boolean playPause;
     private MediaPlayer mediaPlayer;
-    private int mediaFileLengthInMilliseconds; // this value contains the song duration in milliseconds. Look at getDuration() method in MediaPlayer class
-    public int delayMillis = 100;
-    String URL = "http://www.hrupin.com/wp-content/uploads/mp3/testsong_20_sec.mp3";
-    private final Handler handler = new Handler();
-    private String TAG ="StreamingMp3Player";
-    /**
-     * Called when the activity is first created.
-     */
+    private ProgressDialog progressDialog;
+    private boolean initialStage = true;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,130 +41,99 @@ public class StreamingMp3Player extends Activity implements OnClickListener, OnT
         initView();
     }
 
-    /**
-     * This method initialise all the views in project
-     */
     private void initView() {
         buttonPlayPause = (ImageButton) findViewById(R.id.ButtonTestPlayPause);
         buttonPlayPause.setOnClickListener(this);
 
-        songTotalDurationLabel = (TextView) findViewById(R.id.songTotalDurationLabel);
-        songCurrentDurationLabel = (TextView) findViewById(R.id.songCurrentDurationLabel);
 
-        seekBarProgress = (SeekBar) findViewById(R.id.SeekBarTestPlay);
-//        seekBarProgress.setMax(99); // It means 100% .0-99
-        seekBarProgress.setProgress(0);
-        seekBarProgress.setMax(100);
-
-        seekBarProgress.setOnTouchListener(this);
-        editTextSongURL = (EditText) findViewById(R.id.EditTextSongURL);
-        editTextSongURL.setText(R.string.testsong_20_sec);
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        progressBar.setVisibility(View.GONE);
+        btn = (Button) findViewById(R.id.audioStreamBtn);
         mediaPlayer = new MediaPlayer();
-//        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mediaPlayer.setOnBufferingUpdateListener(this);
-        mediaPlayer.setOnCompletionListener(this);
-    }
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        progressDialog = new ProgressDialog(this);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!playPause) {
+                    btn.setText("Pause Streaming");
 
-    /**
-     * Method which updates the SeekBar primary progress by current song playing position
-     */
-    private Runnable mUpdateTimeTask = new Runnable() {
-        public void run() {
-            long totalDuration = mediaPlayer.getDuration();
-            long currentDuration = mediaPlayer.getCurrentPosition();
+                    if (initialStage) {
+                        new Player().execute(URL);
+                    } else {
+                        if (!mediaPlayer.isPlaying())
+                            mediaPlayer.start();
+                    }
 
-            // Displaying Total Duration time
-            songTotalDurationLabel.setText("" + Utils.milliSecondsToTimer(totalDuration));
-            // Displaying time completed playing
-            songCurrentDurationLabel.setText("" + Utils.milliSecondsToTimer(currentDuration));
-//        seekBarProgress.setProgress((int) (((float) mediaPlayer.getCurrentPosition() / mediaFileLengthInMilliseconds) * 100)); // This math construction give a percentage of "was playing"/"song length"
+                    playPause = true;
 
-            // Updating progress bar
-            int progress = Utils.getProgressPercentage(currentDuration, totalDuration);
-            //Log.d("Progress", ""+progress);
-            seekBarProgress.setProgress(progress);
+                } else {
+                    btn.setText("Launch Streaming");
 
-            if (mediaPlayer.isPlaying()) {
-                handler.postDelayed(this, delayMillis);
+                    if (mediaPlayer.isPlaying()) {
+                        mediaPlayer.pause();
+                    }
+
+                    playPause = false;
+                }
             }
-        }
-    };
+        });
 
+    }
 
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.ButtonTestPlayPause) {
-            new AudioPlayer(this,URL,"file name").show();
-//                        play();
+            new AudioPlayer(this, URL, "file name").show();
         }
     }
 
-    private void play() {
-        new processLoading().execute();
-    }
+    class Player extends AsyncTask<String, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(String... strings) {
+            Boolean prepared = false;
 
-    private class processLoading extends AsyncTask<String, String, String> {
+            try {
+                mediaPlayer.setDataSource(strings[0]);
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mediaPlayer) {
+                        initialStage = true;
+                        playPause = false;
+                        btn.setText("Launch Streaming");
+                        mediaPlayer.stop();
+                        mediaPlayer.reset();
+                    }
+                });
+
+                mediaPlayer.prepare();
+                prepared = true;
+
+            } catch (Exception e) {
+                Log.e("MyAudioStreamingApp", e.getMessage());
+                prepared = false;
+            }
+
+            return prepared;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+
+            if (progressDialog.isShowing()) {
+                progressDialog.cancel();
+            }
+
+            mediaPlayer.start();
+            initialStage = false;
+        }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progressBar.setVisibility(View.VISIBLE);
-        }
 
-        @Override
-        protected String doInBackground(String... strings) {
-            try {
-                mediaPlayer.setDataSource(editTextSongURL.getText().toString()); // setup song from http://www.hrupin.com/wp-content/uploads/mp3/testsong_20_sec.mp3 URL to mediaplayer data source
-                mediaPlayer.prepare(); // you must call this method after setup the datasource in setDataSource method. After calling prepare() the instance of MediaPlayer starts load data from URL to internal buffer.
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            progressBar.setVisibility(View.GONE);
-            mediaFileLengthInMilliseconds = mediaPlayer.getDuration(); // gets the song length in milliseconds from URL
-
-            if (!mediaPlayer.isPlaying()) {
-                mediaPlayer.start();
-                buttonPlayPause.setImageResource(R.drawable.button_pause);
-            } else {
-                mediaPlayer.pause();
-                buttonPlayPause.setImageResource(R.drawable.button_play);
-            }
-            handler.postDelayed(mUpdateTimeTask, delayMillis);
+            progressDialog.setMessage("Buffering...");
+            progressDialog.show();
         }
     }
-
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        if (v.getId() == R.id.SeekBarTestPlay) {
-            /** Seekbar onTouch event handler. Method which seeks MediaPlayer to seekBar primary progress position*/
-            if (mediaPlayer.isPlaying()) {
-                SeekBar sb = (SeekBar) v;
-                int playPositionInMillisecconds = (mediaFileLengthInMilliseconds / 100) * sb.getProgress();
-                mediaPlayer.seekTo(playPositionInMillisecconds);
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        /** MediaPlayer onCompletion event handler. Method which calls then song playing is complete*/
-        buttonPlayPause.setImageResource(R.drawable.button_play);
-    }
-
-    @Override
-    public void onBufferingUpdate(MediaPlayer mp, int percent) {
-        /** Method which updates the SeekBar secondary progress by current song loading from URL position*/
-//        Log.d(TAG,"onBufferingUpdate:"+percent);
-        seekBarProgress.setSecondaryProgress(percent);
-    }
-
 }
 
