@@ -28,8 +28,8 @@ import android.widget.Toast;
 
 public class AudioPlayer extends Dialog implements View.OnClickListener, View.OnTouchListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnBufferingUpdateListener {
     private TextView songTotalDurationLabel, songCurrentDurationLabel;
-    private ImageButton buttonPlayPause;
-    private SeekBar seekBarProgress;
+    private ImageView buttonPlayPause;
+    private AppCompatSeekBar seekBarProgress;
     private ProgressBar progressBar;
     private MediaPlayer mediaPlayer;
     private int mediaFileLengthInMilliseconds; // this value contains the song duration in milliseconds. Look at getDuration() method in MediaPlayer class
@@ -57,7 +57,7 @@ public class AudioPlayer extends Dialog implements View.OnClickListener, View.On
     }
 
     private void initView() {
-        buttonPlayPause = (ImageButton) findViewById(R.id.ButtonTestPlayPause);
+        buttonPlayPause = (ImageView) findViewById(R.id.ButtonTestPlayPause);
         buttonPlayPause.setOnClickListener(this);
         tvName = (TextView) findViewById(R.id.tvName);
         tvName.setText(fileName);
@@ -67,7 +67,7 @@ public class AudioPlayer extends Dialog implements View.OnClickListener, View.On
         ivClose = (ImageView) findViewById(R.id.ivClose);
         ivClose.setOnClickListener(this);
 
-        seekBarProgress = (SeekBar) findViewById(R.id.SeekBarTestPlay);
+        seekBarProgress = (AppCompatSeekBar) findViewById(R.id.SeekBarTestPlay);
 //        seekBarProgress.setMax(99); // It means 100% .0-99
         seekBarProgress.setProgress(0);
         seekBarProgress.setMax(100);
@@ -155,10 +155,10 @@ public class AudioPlayer extends Dialog implements View.OnClickListener, View.On
 
             if (!mediaPlayer.isPlaying()) {
                 mediaPlayer.start();
-                buttonPlayPause.setImageResource(R.drawable.button_pause);
+                buttonPlayPause.setImageResource(R.drawable.baseline_pause_black_24dp);
             } else {
                 mediaPlayer.pause();
-                buttonPlayPause.setImageResource(R.drawable.button_play);
+                buttonPlayPause.setImageResource(R.drawable.baseline_play_arrow_black_24dp);
             }
             handler.postDelayed(mUpdateTimeTask, delayMillis);
         }
@@ -180,7 +180,7 @@ public class AudioPlayer extends Dialog implements View.OnClickListener, View.On
     @Override
     public void onCompletion(MediaPlayer mp) {
         /** MediaPlayer onCompletion event handler. Method which calls then song playing is complete*/
-        buttonPlayPause.setImageResource(R.drawable.button_play);
+        buttonPlayPause.setImageResource(R.drawable.baseline_play_arrow_black_24dp);
     }
 
     @Override

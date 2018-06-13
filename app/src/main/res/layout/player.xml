@@ -23,8 +23,8 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingLeft="5dp"
             android:layout_gravity="center"
+            android:paddingLeft="5dp"
             android:paddingRight="5dp">
 
             <TextView
@@ -49,12 +49,15 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <ImageButton
+        <ImageView
             android:id="@+id/ButtonTestPlayPause"
-            android:layout_width="wrap_content"
+            android:layout_width="30dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:src="@drawable/button_play" />
+            android:padding="5dp"
+            android:adjustViewBounds="true"
+            android:background="?android:attr/selectableItemBackground"
+            android:src="@drawable/baseline_play_arrow_black_24dp" />
 
         <TextView
             android:id="@+id/songCurrentDurationLabel"
@@ -76,7 +79,7 @@
             android:layout_gravity="center"
             android:text="NA" />
 
-        <SeekBar
+        <android.support.v7.widget.AppCompatSeekBar
             android:id="@+id/SeekBarTestPlay"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
