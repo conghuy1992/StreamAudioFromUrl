@@ -146,10 +146,10 @@ public class AudioPlayer extends Dialog implements View.OnClickListener, View.On
         protected void onPostExecute(Boolean flag) {
             super.onPostExecute(flag);
             buttonPlayPause.setEnabled(true);
-            if(!flag){
-                Toast.makeText(getContext(),"FAIL",Toast.LENGTH_SHORT).show();
-                return;
-            }
+//            if(!flag){
+//                Toast.makeText(getContext(),"FAIL",Toast.LENGTH_SHORT).show();
+//                return;
+//            }
             if (progressBar != null) progressBar.setVisibility(View.GONE);
             mediaFileLengthInMilliseconds = mediaPlayer.getDuration(); // gets the song length in milliseconds from URL
 
